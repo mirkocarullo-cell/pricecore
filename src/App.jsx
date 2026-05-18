@@ -60,6 +60,7 @@ export default function PriceCore() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+  const [showDonate, setShowDonate] = useState(false);
 
   const toggleDanno = (label) => {
     if (label.includes("Nessun")) {
@@ -102,6 +103,7 @@ Rispondi SOLO con JSON valido, nessun testo extra, nessun backtick.
       const data = await res.json();
       const text = (data.content || []).find(b => b.type === "text")?.text || "";
       setResult(JSON.parse(text.replace(/```json|```/g, "").trim()));
+      setTimeout(() => setShowDonate(true), 2500);
     } catch (e) {
       setError("Errore: " + e.message);
     }
@@ -134,7 +136,7 @@ Rispondi SOLO con JSON valido, nessun testo extra, nessun backtick.
     URL.revokeObjectURL(url);
   };
 
-  const reset = () => { setStep(1); setModello(""); setGb(""); setAcq(""); setBatt(""); setSchermo(""); setConn(""); setDanni([]); setResult(null); setError(""); };
+  const reset = () => { setStep(1); setModello(""); setGb(""); setAcq(""); setBatt(""); setSchermo(""); setConn(""); setDanni([]); setResult(null); setError(""); setShowDonate(false); };
 
   const Btn = ({ children, onClick, outline = false, disabled = false }) => (
     <button onClick={onClick} disabled={disabled} style={{ width: "100%", padding: 14, borderRadius: 12, border: outline ? "1px solid #333" : "none", background: disabled ? "#222" : outline ? "transparent" : ORANGE, color: outline ? "#aaa" : "#fff", fontWeight: 700, fontSize: 15, cursor: disabled ? "not-allowed" : "pointer", marginTop: 10 }}>
@@ -145,6 +147,27 @@ Rispondi SOLO con JSON valido, nessun testo extra, nessun backtick.
   return (
     <div style={{ background: "#0a0a0a", color: "#f0f0f0", minHeight: "100vh", padding: "24px 16px", fontFamily: "-apple-system, sans-serif" }}>
       <div style={{ maxWidth: 600, margin: "0 auto" }}>
+
+        {showDonate && (
+          <div onClick={() => setShowDonate(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: "#141414", border: `2px solid ${ORANGE}`, borderRadius: 16, padding: 28, maxWidth: 380, textAlign: "center", position: "relative" }}>
+              <div onClick={() => setShowDonate(false)} style={{ position: "absolute", top: 12, right: 16, color: "#666", fontSize: 22, cursor: "pointer" }}>×</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>☕</div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Ti è stato utile?</h2>
+              <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
+                PriceCore è gratuito grazie al supporto della community.<br />
+                Offrimi un caffè per mantenerlo attivo! 💛
+              </p>
+              <a href="https://ko-fi.com/mirkotechinsider" target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: 14, borderRadius: 10, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none", marginBottom: 10 }}>
+                ☕ Offri un caffè
+              </a>
+              <div onClick={() => setShowDonate(false)} style={{ color: "#666", fontSize: 13, cursor: "pointer", padding: 8 }}>
+                Magari più tardi
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, color: ORANGE, textTransform: "uppercase", marginBottom: 4 }}>Mirko Tech Insider</div>
           <h1 style={{ fontSize: 30, fontWeight: 900, letterSpacing: -1, margin: 0 }}>Price<span style={{ color: ORANGE }}>Core</span></h1>
