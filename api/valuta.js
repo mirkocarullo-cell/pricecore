@@ -1,3 +1,17 @@
+const SYSTEM = `Sei un perito esperto di smartphone, tablet e dispositivi elettronici usati, specializzato nel mercato italiano dell'usato e del ricondizionato.
+
+OBIETTIVO: stimare il valore reale di rivendita di un dispositivo usato, con prezzi realistici e aggiornati.
+
+METODOLOGIA (seguila sempre):
+1. Usa lo strumento web_search per trovare i PREZZI REALI ATTUALI del modello indicato sul mercato italiano. Cerca su fonti come Subito.it, eBay.it, Swappie, Refurbed, TrenDevice e siti di ricondizionati. Cerca il modello esatto con lo storage indicato.
+2. Parti dal prezzo medio dell'usato in grado A trovato online.
+3. Applica i deprezzamenti per le condizioni reali del dispositivo (batteria, schermo, connettore, altri danni).
+4. Fornisci sempre RANGE realistici (minimo–massimo) in euro, non un valore secco: per l'usato un range è più onesto e credibile.
+5. Garantisci coerenza: valore_tuo <= valore_grado_a <= valore_nuovo.
+6. Se non trovi dati precisi, stima in modo prudente e dichiaralo nella motivazione.
+
+Rispondi SEMPRE e SOLO con un oggetto JSON valido, senza testo prima o dopo, senza backtick, senza markdown.`;
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -9,34 +23,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Prompt mancante" });
   }
 
-  const systemPrompt = `Sei un valutatore professionista di smartphone usati nel mercato italiano 2026.
-
-REGOLE:
-1. Usa prezzi REALI di Subito/eBay/Swappie/Backmarket, NON listino.
-2. Deprezzamento: -35% dopo 1 anno, -55% dopo 2, -70% dopo 3.
-3. Sii rigoroso e conservativo. MEGLIO STIMARE BASSO CHE ALTO.
-
-DEPREZZAMENTI (applicali tutti insieme):
-- Ricondizionato (non nuovo): -10%
-- Batteria 80-89%: -10%
-- Batteria 70-79%: -20%
-- Batteria <70%: -35%
-- Schermo graffi lievi: -10%
-- Schermo crepato: -50%
-- Connettore parziale: -15%
-- Connettore rotto: -30%
-- Contatto acqua: -40%
-- Scocca sostituita: -25%
-- Ogni altro danno minore: -10%
-
-GRADO:
-- A: batteria >85%, no danni
-- B: batteria 80-85%, lievi graffi
-- C: batteria 70-80%, segni d'uso
-- D: batteria <70% o danni gravi
-
-Rispondi SOLO con JSON, senza markdown, senza backtick, senza testo extra.`;
-
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -46,24 +32,29 @@ Rispondi SOLO con JSON, senza markdown, senza backtick, senza testo extra.`;
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 6000,
-        system: systemPrompt,
+        model: "claude-sonnet-4-6",
+        max_tokens: 2500,
+        temperature: 0.2,
+        system: SYSTEM,
         messages: [{ role: "user", content: prompt }],
+        tools: [
+          {
+            type: "web_search_20260209",
+            name: "web_search",
+            max_uses: 5,
+            user_location: {
+              type: "approximate",
+              country: "IT",
+              timezone: "Europe/Rome",
+            },
+          },
+        ],
       }),
     });
 
-    const raw = await response.text();
-    console.log("STATUS:", response.status);
-    console.log("RAW:", raw.substring(0, 500));
-
-    if (!response.ok) {
-      return res.status(200).json({ error: "API_ERROR", status: response.status, raw: raw.substring(0, 500) });
-    }
-
-    const data = JSON.parse(raw);
+    const data = await response.json();
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(200).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
