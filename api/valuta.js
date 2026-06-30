@@ -23,12 +23,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Prompt mancante" });
   }
 
+  const apiKey = (process.env.ANTHROPIC_API_KEY || "").trim();
+  if (!apiKey) {
+    return res.status(500).json({ error: "ANTHROPIC_API_KEY non configurata sul server" });
+  }
+
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
