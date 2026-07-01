@@ -169,6 +169,7 @@
     // Auto-login se la password è già in sessione
     const saved = sessionStorage.getItem("pc_pass");
     if (saved) {
+      
       load(saved).then(render).catch(() => sessionStorage.removeItem("pc_pass"));
     }
   </script>
