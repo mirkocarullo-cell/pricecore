@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>PriceCore · Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    :root { --orange: #ff6a00; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; color: #f0f0f0; font-family: -apple-system, system-ui, sans-serif; padding: 24px 16px; }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    .head { text-align: center; margin-bottom: 28px; }
+    .kick { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--orange); text-transform: uppercase; }
+    h1 { font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-top: 4px; }
+    h1 span { color: var(--orange); }
+    .sub { color: #555; font-size: 13px; margin-top: 6px; }
+
+    .gate { max-width: 360px; margin: 60px auto; }
+    input { width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid #2a2a2a; background: #141414; color: #fff; font-size: 15px; outline: none; }
+    button { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--orange); color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px; }
+    .err { color: #f44336; font-size: 13px; margin-top: 10px; text-align: center; }
+
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .kpi { background: #141414; border: 1px solid #222; border-radius: 14px; padding: 16px; text-align: center; }
+    .kpi .lbl { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .kpi .val { font-size: 24px; font-weight: 900; color: var(--orange); }
+    .card { background: #141414; border: 1px solid #222; border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+    .card h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 14px; }
+    .row { display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #1c1c1c; }
+    .row:last-child { border-bottom: none; }
+    .row .n { color: var(--orange); font-weight: 700; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .muted { color: #555; font-size: 13px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } .two { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="kick">Mirko Tech Insider</div>
+      <h1>Price<span>Core</span> · Dashboard</h1>
+      <div class="sub">Statistiche valutazioni</div>
+    </div>
+
+    <div id="gate" class="gate">
+      <input id="pass" type="password" placeholder="Password dashboard" />
+      <button id="enter">Entra →</button>
+      <div id="gateErr" class="err"></div>
+    </div>
+
+    <div id="app" style="display:none">
+      <div class="grid">
+        <div class="kpi"><div class="lbl">Totale</div><div class="val" id="k-total">–</div></div>
+        <div class="kpi"><div class="lbl">Ultimi 7 gg</div><div class="val" id="k-7">–</div></div>
+        <div class="kpi"><div class="lbl">Ultimi 30 gg</div><div class="val" id="k-30">–</div></div>
+        <div class="kpi"><div class="lbl">Valore medio</div><div class="val" id="k-avg">–</div></div>
+      </div>
+
+      <div class="card">
+        <h2>📈 Valutazioni per giorno (30 gg)</h2>
+        <canvas id="chartDay" height="120"></canvas>
+        <div id="dayEmpty" class="muted" style="display:none">Ancora nessun dato.</div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <h2>📱 Modelli più valutati</h2>
+          <div id="models"></div>
+        </div>
+        <div class="card">
+          <h2>🏷️ Distribuzione gradi</h2>
+          <canvas id="chartGrade" height="160"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ORANGE = "#ff6a00";
+    let chartDay, chartGrade;
+
+    async function load(pass) {
+      const res = await fetch("/api/stats", { headers: { "x-dashboard-password": pass } });
+      if (res.status === 401) throw new Error("Password errata");
+      if (!res.ok) throw new Error("Errore server");
+      return res.json();
+    }
+
+    function render(d) {
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("app").style.display = "block";
+
+      document.getElementById("k-total").textContent = d.total ?? 0;
+      document.getElementById("k-7").textContent = d.last7 ?? 0;
+      document.getElementById("k-30").textContent = d.last30 ?? 0;
+      document.getElementById("k-avg").textContent = d.avg ? "€ " + d.avg : "–";
+
+      // Modelli top
+      const models = document.getElementById("models");
+      if (d.topModels && d.topModels.length) {
+        models.innerHTML = d.topModels
+          .map((m) => `<div class="row"><span>${escapeHtml(m.modello)}</span><span class="n">${m.n}</span></div>`)
+          .join("");
+      } else {
+        models.innerHTML = '<div class="muted">Ancora nessun dato.</div>';
+      }
+
+      // Grafico per giorno
+      const dayEmpty = document.getElementById("dayEmpty");
+      if (d.perDay && d.perDay.length) {
+        dayEmpty.style.display = "none";
+        chartDay && chartDay.destroy();
+        chartDay = new Chart(document.getElementById("chartDay"), {
+          type: "bar",
+          data: {
+            labels: d.perDay.map((x) => x.giorno),
+            datasets: [{ data: d.perDay.map((x) => x.n), backgroundColor: ORANGE, borderRadius: 4 }],
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: "#777" }, grid: { display: false } },
+              y: { ticks: { color: "#777", precision: 0 }, grid: { color: "#1c1c1c" } },
+            },
+          },
+        });
+      } else {
+        dayEmpty.style.display = "block";
+      }
+
+      // Grafico gradi
+      if (d.grades && d.grades.length) {
+        const colors = { A: "#4caf50", B: ORANGE, C: "#f44336" };
+        chartGrade && chartGrade.destroy();
+        chartGrade = new Chart(document.getElementById("chartGrade"), {
+          type: "doughnut",
+          data: {
+            labels: d.grades.map((g) => "Grado " + g.grado),
+            datasets: [{ data: d.grades.map((g) => g.n), backgroundColor: d.grades.map((g) => colors[String(g.grado).trim()] || "#888") }],
+          },
+          options: { plugins: { legend: { labels: { color: "#ccc" } } } },
+        });
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    }
+
+    async function enter() {
+      const pass = document.getElementById("pass").value.trim();
+      const err = document.getElementById("gateErr");
+      err.textContent = "";
+      if (!pass) return;
+      try {
+        const d = await load(pass);
+        sessionStorage.setItem("pc_pass", pass);
+        render(d);
+      } catch (e) {
+        err.textContent = e.message;
+      }
+    }
+
+    document.getElementById("enter").addEventListener("click", enter);
+    document.getElementById("pass").addEventListener("keydown", (e) => { if (e.key === "Enter") enter(); });
+
+    // Auto-login se la password è già in sessione
+    const saved = sessionStorage.getItem("pc_pass");
+    if (saved) {
+      load(saved).then(render).catch(() => sessionStorage.removeItem("pc_pass"));
+    }
+  </script>
+</body>
+</html>

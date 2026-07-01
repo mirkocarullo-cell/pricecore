@@ -1,3 +1,5 @@
+import { sql } from "@vercel/postgres";
+
 const SYSTEM = `Sei un perito esperto di smartphone, tablet e dispositivi elettronici usati, specializzato nel mercato italiano dell'usato e del ricondizionato.
 
 OBIETTIVO: stimare il valore reale di rivendita di un dispositivo usato, con prezzi realistici e aggiornati.
@@ -12,12 +14,66 @@ METODOLOGIA (seguila sempre):
 
 Rispondi SEMPRE e SOLO con un oggetto JSON valido, senza testo prima o dopo, senza backtick, senza markdown.`;
 
+// Estrae un valore numerico medio da un range tipo "320–380 €" -> 350
+function toNum(v) {
+  const clean = String(v || "").replace(/\./g, "");
+  const nums = (clean.match(/\d+/g) || []).map(Number).filter((n) => n > 0);
+  if (!nums.length) return null;
+  return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+}
+
+async function salvaValutazione(data, dati) {
+  try {
+    const text = (data.content || [])
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("\n");
+    const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+    if (!json) return;
+    const r = JSON.parse(json);
+    const d = dati || {};
+
+    await sql`CREATE TABLE IF NOT EXISTS valutazioni (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      modello TEXT,
+      storage TEXT,
+      batteria TEXT,
+      schermo TEXT,
+      connettore TEXT,
+      danni TEXT,
+      acquisto TEXT,
+      grado TEXT,
+      valore_tuo TEXT,
+      valore_tuo_num NUMERIC
+    )`;
+
+    await sql`INSERT INTO valutazioni
+      (modello, storage, batteria, schermo, connettore, danni, acquisto, grado, valore_tuo, valore_tuo_num)
+      VALUES (
+        ${d.modello || r.modello || null},
+        ${d.gb || r.storage || null},
+        ${d.batt || null},
+        ${d.schermo || null},
+        ${d.conn || null},
+        ${d.danni || null},
+        ${d.acq || null},
+        ${r.grado_stimato || null},
+        ${r.valore_tuo || null},
+        ${toNum(r.valore_tuo)}
+      )`;
+  } catch (e) {
+    // salvataggio best-effort: non deve mai bloccare la risposta all'utente
+    console.error("Salvataggio valutazione fallito:", e.message);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { prompt } = req.body;
+  const { prompt, dati } = req.body;
 
   if (!prompt) {
     return res.status(400).json({ error: "Prompt mancante" });
@@ -58,6 +114,12 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+
+    // Salva la valutazione nel database (non blocca la risposta)
+    if (!data.error) {
+      await salvaValutazione(data, dati);
+    }
+
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: error.message });
