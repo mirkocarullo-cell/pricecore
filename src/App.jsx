@@ -28,7 +28,7 @@ export default function PriceCore() {
   const [showDonate, setShowDonate] = useState(false);
   const [fadeIn, setFadeIn] = useState(true);
 
-  const TOTAL_STEPS = 12;
+  const TOTAL_STEPS = 13;
 
   useEffect(() => {
     setFadeIn(false);
@@ -54,12 +54,15 @@ export default function PriceCore() {
 
   const valuta = async () => {
     setLoading(true); setResult(null); setError("");
-    const prompt = `Valuta questo dispositivo usato con RIGORE:
+    const prompt = `Valuta questo dispositivo usato nel mercato italiano 2026 con RIGORE.
+
+DATI DISPOSITIVO:
 - Modello: ${data.modello}
 - Storage: ${data.gb}
 - Acquistato: ${data.acq || "Nuovo"}
 - IMEI leggibile: ${data.imei}
 - Si connette a internet: ${data.internet}
+- Face ID / riconoscimento: ${data.faceid}
 - Batteria: ${data.batt}
 - Schermo: ${data.schermo}
 - Scocca: ${data.scocca}
@@ -67,6 +70,29 @@ export default function PriceCore() {
 - Connettore ricarica: ${data.conn}
 - Lavori pregressi su scheda madre: ${data.schedamadre}
 - Altri danni: ${(data.danni || []).join(", ") || "Nessuno"}
+
+REGOLE OBBLIGATORIE DI DEPREZZAMENTO (applica sempre):
+- Batteria sotto il 90% (80-89%, 70-79% o meno): sottrai ALMENO €40 (va cambiata)
+- Batteria 70-79%: sottrai €70
+- Batteria sotto 70%: sottrai €100
+- Schermo con graffi lievi: sottrai €30
+- Schermo con crepe/rotture: sottrai €150
+- Scocca NON come nuova (lievi, evidenti o danneggiata): sottrai SEMPRE €50
+- Scocca molto danneggiata o piegata: sottrai €120
+- Altoparlante superiore si sente basso: sottrai €15
+- Altoparlante superiore gracchia o non funziona: sottrai €30
+- Face ID NON funziona: sottrai €80
+- IMEI non leggibile: sottrai €200 (possibile dispositivo rubato)
+- Non si connette a internet: sottrai €150
+- Connettore ricarica parziale: sottrai €40
+- Connettore ricarica rotto: sottrai €80
+- Contatto con acqua: sottrai €100
+- Scocca sostituita: sottrai €60
+- Lavori pregressi su scheda madre: sottrai €80
+- Ricondizionato (non nuovo): applica -10% sul totale finale
+- Ogni altro danno minore (tasti, microfono, fotocamera): sottrai €30 ciascuno
+
+PARTI dal valore di mercato reale grado A (usa prezzi Subito/Swappie/Backmarket 2026), poi applica TUTTI i deprezzamenti pertinenti in euro.
 
 Rispondi SOLO con JSON valido, senza markdown, senza backtick.
 {"modello":"nome completo","anno":"anno uscita","storage":"${data.gb}","valore_nuovo":"euro","valore_grado_a":"euro","valore_tuo":"euro","grado_stimato":"A o B o C o D","motivazione_grado":"2 righe","deprezzamenti":["motivo con impatto euro"],"punti_forza":["punto"],"consigli_vendita":"2-3 consigli","copy_annuncio":"4 righe italiano persuasivo"}`;
@@ -113,31 +139,53 @@ Rispondi SOLO con JSON valido, senza markdown, senza backtick.
     URL.revokeObjectURL(url);
   };
 
+  // STIMA LIVE con deprezzamenti in euro
   const stimaLive = () => {
     if (!data.modello) return null;
     let base = 400;
-    if (data.modello.includes("Pro Max") || data.modello.includes("Ultra")) base = 700;
-    else if (data.modello.includes("Pro") || data.modello.includes("Plus")) base = 550;
-    if (data.gb === "256 GB") base += 50;
-    if (data.gb === "512 GB") base += 120;
-    if (data.gb === "1 TB") base += 200;
+    if (data.modello.includes("16 Pro Max") || data.modello.includes("15 Pro Max")) base = 900;
+    else if (data.modello.includes("16 Pro") || data.modello.includes("15 Pro")) base = 750;
+    else if (data.modello.includes("14 Pro Max") || data.modello.includes("13 Pro Max")) base = 650;
+    else if (data.modello.includes("14 Pro") || data.modello.includes("13 Pro")) base = 500;
+    else if (data.modello.includes("Pro Max") || data.modello.includes("Ultra")) base = 400;
+    else if (data.modello.includes("Pro") || data.modello.includes("Plus")) base = 350;
+    else if (data.modello.includes("16") || data.modello.includes("15")) base = 550;
+    else if (data.modello.includes("14")) base = 400;
+    else if (data.modello.includes("13")) base = 300;
+    else if (data.modello.includes("12")) base = 220;
+    else if (data.modello.includes("11")) base = 170;
+    else base = 250;
+    
+    if (data.gb === "256 GB") base += 60;
+    if (data.gb === "512 GB") base += 150;
+    if (data.gb === "1 TB") base += 250;
+    
     if (data.acq?.includes("Ricondizionato")) base *= 0.9;
-    if (data.imei?.includes("No")) base *= 0.3;
-    if (data.internet?.includes("No")) base *= 0.5;
-    if (data.batt?.includes("80-89")) base *= 0.9;
-    if (data.batt?.includes("70-79")) base *= 0.8;
-    if (data.batt?.includes("Meno")) base *= 0.65;
-    if (data.schermo?.includes("Graffi")) base *= 0.9;
-    if (data.schermo?.includes("Crepe")) base *= 0.5;
-    if (data.scocca?.includes("molto danneggiata")) base *= 0.5;
-    if (data.scocca?.includes("segni evidenti")) base *= 0.75;
-    if (data.scocca?.includes("segni lievi")) base *= 0.9;
-    if (data.altoparlante?.includes("basso")) base *= 0.9;
-    if (data.altoparlante?.includes("Gracchia")) base *= 0.8;
-    if (data.conn?.includes("parziali") || data.conn?.includes("intermittenti")) base *= 0.85;
-    if (data.conn?.includes("Non funziona")) base *= 0.7;
-    if (data.schedamadre?.includes("Sì")) base *= 0.6;
-    if (data.danni?.length && !data.danni.includes("✅ Nessun altro danno")) base *= Math.pow(0.9, data.danni.length);
+    
+    // Deprezzamenti fissi in euro
+    if (data.imei?.includes("No")) base -= 200;
+    if (data.internet?.includes("No")) base -= 150;
+    if (data.faceid?.includes("No")) base -= 80;
+    if (data.batt?.includes("80-89")) base -= 40;
+    if (data.batt?.includes("70-79")) base -= 70;
+    if (data.batt?.includes("Meno")) base -= 100;
+    if (data.schermo?.includes("Piccoli graffi") || data.schermo?.includes("graffi visibili")) base -= 30;
+    if (data.schermo?.includes("Crepe")) base -= 150;
+    if (data.scocca?.includes("segni lievi")) base -= 50;
+    if (data.scocca?.includes("segni evidenti")) base -= 50;
+    if (data.scocca?.includes("molto danneggiata")) base -= 120;
+    if (data.altoparlante?.includes("basso")) base -= 15;
+    if (data.altoparlante?.includes("Gracchia")) base -= 30;
+    if (data.conn?.includes("intermittenti") || data.conn?.includes("parziali")) base -= 40;
+    if (data.conn?.includes("Non funziona")) base -= 80;
+    if (data.schedamadre?.includes("Sì")) base -= 80;
+    
+    if (data.danni?.includes("💧 Contatto con acqua")) base -= 100;
+    if (data.danni?.includes("🔧 Scocca sostituita")) base -= 60;
+    if (data.danni?.includes("🔘 Tasti laterali difettosi")) base -= 30;
+    if (data.danni?.includes("🎙️ Microfono difettoso")) base -= 30;
+    if (data.danni?.includes("📷 Fotocamera difettosa")) base -= 30;
+    
     return Math.max(30, Math.round(base));
   };
 
@@ -222,12 +270,21 @@ Rispondi SOLO con JSON valido, senza markdown, senza backtick.
       valid: () => !!data.internet
     },
     {
+      title: "Il Face ID funziona?",
+      sub: "Prova a sbloccare il telefono con il riconoscimento facciale.",
+      content: [
+        { label: "✅ Sì, funziona correttamente", color: "#4caf50" },
+        { label: "❌ No, non funziona", color: "#f44336" }
+      ].map(o => <Pill key={o.label} label={o.label} color={o.color} selected={data.faceid === o.label} onClick={() => update("faceid", o.label)} />),
+      valid: () => !!data.faceid
+    },
+    {
       title: "Stato della batteria",
       sub: "Controlla in Impostazioni → Batteria → Stato batteria.",
       content: [
         { label: "🟢 90–100%", color: "#4caf50" },
-        { label: "🟡 80–89%", color: "#4caf50" },
-        { label: "🟠 70–79%", color: ORANGE },
+        { label: "🟡 80–89%", color: ORANGE },
+        { label: "🟠 70–79%", color: "#ff9800" },
         { label: "🔴 Meno del 70%", color: "#f44336" }
       ].map(o => <Pill key={o.label} label={o.label} color={o.color} selected={data.batt === o.label} onClick={() => update("batt", o.label)} />),
       valid: () => !!data.batt
@@ -447,6 +504,7 @@ Rispondi SOLO con JSON valido, senza markdown, senza backtick.
                   ["Acquistato", data.acq],
                   ["IMEI", data.imei],
                   ["Internet", data.internet],
+                  ["Face ID", data.faceid],
                   ["Batteria", data.batt],
                   ["Schermo", data.schermo],
                   ["Scocca", data.scocca],
