@@ -1,127 +1,47 @@
-import { sql } from "@vercel/postgres";
-
-const SYSTEM = `Sei un perito esperto di smartphone, tablet e dispositivi elettronici usati, specializzato nel mercato italiano dell'usato e del ricondizionato.
-
-OBIETTIVO: stimare il valore reale di rivendita di un dispositivo usato, con prezzi realistici e aggiornati.
-
-METODOLOGIA (seguila sempre):
-1. Usa lo strumento web_search per trovare i PREZZI REALI ATTUALI del modello indicato sul mercato italiano. Cerca su fonti come Subito.it, eBay.it, Swappie, Refurbed, TrenDevice e siti di ricondizionati. Cerca il modello esatto con lo storage indicato.
-2. Parti dal prezzo medio dell'usato in grado A trovato online.
-3. Applica i deprezzamenti per le condizioni reali del dispositivo (batteria, schermo, connettore, altri danni).
-4. Fornisci sempre RANGE realistici (minimo–massimo) in euro, non un valore secco: per l'usato un range è più onesto e credibile.
-5. Garantisci coerenza: valore_tuo <= valore_grado_a <= valore_nuovo.
-6. Se non trovi dati precisi, stima in modo prudente e dichiaralo nella motivazione.
-
-Rispondi SEMPRE e SOLO con un oggetto JSON valido, senza testo prima o dopo, senza backtick, senza markdown.`;
-
-// Estrae un valore numerico medio da un range tipo "320–380 €" -> 350
-function toNum(v) {
-  const clean = String(v || "").replace(/\./g, "");
-  const nums = (clean.match(/\d+/g) || []).map(Number).filter((n) => n > 0);
-  if (!nums.length) return null;
-  return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
-}
-
-async function salvaValutazione(data, dati) {
-  try {
-    const text = (data.content || [])
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
-    const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
-    if (!json) return;
-    const r = JSON.parse(json);
-    const d = dati || {};
-
-    await sql`CREATE TABLE IF NOT EXISTS valutazioni (
-      id SERIAL PRIMARY KEY,
-      created_at TIMESTAMPTZ DEFAULT now(),
-      modello TEXT,
-      storage TEXT,
-      batteria TEXT,
-      schermo TEXT,
-      connettore TEXT,
-      danni TEXT,
-      acquisto TEXT,
-      grado TEXT,
-      valore_tuo TEXT,
-      valore_tuo_num NUMERIC
-    )`;
-
-    await sql`INSERT INTO valutazioni
-      (modello, storage, batteria, schermo, connettore, danni, acquisto, grado, valore_tuo, valore_tuo_num)
-      VALUES (
-        ${d.modello || r.modello || null},
-        ${d.gb || r.storage || null},
-        ${d.batt || null},
-        ${d.schermo || null},
-        ${d.conn || null},
-        ${d.danni || null},
-        ${d.acq || null},
-        ${r.grado_stimato || null},
-        ${r.valore_tuo || null},
-        ${toNum(r.valore_tuo)}
-      )`;
-  } catch (e) {
-    // salvataggio best-effort: non deve mai bloccare la risposta all'utente
-    console.error("Salvataggio valutazione fallito:", e.message);
-  }
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { prompt, dati } = req.body;
-
+  const { prompt } = req.body;
   if (!prompt) {
     return res.status(400).json({ error: "Prompt mancante" });
   }
 
-  const apiKey = (process.env.ANTHROPIC_API_KEY || "").trim();
-  if (!apiKey) {
-    return res.status(500).json({ error: "ANTHROPIC_API_KEY non configurata sul server" });
-  }
+  const systemPrompt = `Sei un valutatore professionista di smartphone usati nel mercato italiano 2026.
+
+Il tuo compito è fornire SOLO il valore di mercato REALE, non il listino:
+- valore_nuovo: prezzo medio del dispositivo NUOVO oggi (o all'uscita se fuori produzione)
+- valore_grado_a: prezzo REALE a cui si vende oggi un esemplare in condizioni PERFETTE (grado A) su Subito, eBay, Swappie, Backmarket, Refurbed in Italia
+
+IMPORTANTE: NON applicare tu i deprezzamenti per i difetti. Ci pensa il sistema.
+Sii CONSERVATIVO sul valore grado A: usa il prezzo realistico di vendita rapida, non quello ottimistico.
+Curva di deprezzamento: -35% dopo 1 anno, -55% dopo 2 anni, -70% dopo 3 anni, -80% dopo 4 anni.
+
+Rispondi SOLO con JSON valido, senza markdown, senza backtick, senza testo extra.`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 2500,
-        temperature: 0.2,
-        system: SYSTEM,
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 1500,
+        system: systemPrompt,
         messages: [{ role: "user", content: prompt }],
-        tools: [
-          {
-            type: "web_search_20260209",
-            name: "web_search",
-            max_uses: 5,
-            user_location: {
-              type: "approximate",
-              country: "IT",
-              timezone: "Europe/Rome",
-            },
-          },
-        ],
       }),
     });
 
-    const data = await response.json();
-
-    // Salva la valutazione nel database (non blocca la risposta)
-    if (!data.error) {
-      await salvaValutazione(data, dati);
+    const raw = await response.text();
+    if (!response.ok) {
+      return res.status(200).json({ error: "API_ERROR", status: response.status, raw: raw.substring(0, 300) });
     }
-
-    return res.status(200).json(data);
+    return res.status(200).json(JSON.parse(raw));
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(200).json({ error: error.message });
   }
 }
