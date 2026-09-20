@@ -1,25 +1,11 @@
 import { useState, useEffect } from "react";
-import { baseComeNuovo, calcolaValore } from "./motorePrezzi";
+import { baseComeNuovo, calcolaValore, MODELLI as MODELS } from "./motorePrezzi";
 
 const ORANGE = "#ff6a00";
 const DARK = "#0a0a0a";
 const CARD = "#141414";
 const LINE = "#2a2a2a";
 const MUTED = "#888";
-
-const MODELS = [
-  "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16",
-  "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
-  "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
-  "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13", "iPhone 13 Mini",
-  "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12", "iPhone 12 Mini",
-  "iPhone SE 2022", "iPhone 11 Pro Max", "iPhone 11 Pro", "iPhone 11",
-  "Samsung Galaxy S24 Ultra", "Samsung Galaxy S24+", "Samsung Galaxy S24",
-  "Samsung Galaxy S23 Ultra", "Samsung Galaxy S23+", "Samsung Galaxy S23",
-  "Samsung Galaxy S22 Ultra", "Samsung Galaxy S22+", "Samsung Galaxy S22",
-  "Xiaomi 14 Ultra", "Xiaomi 14 Pro", "Xiaomi 13 Pro", "Google Pixel 8 Pro", "Google Pixel 8", "Altro"
-];
-
 
 function parseEuro(str) {
   if (!str) return 0;

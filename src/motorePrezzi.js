@@ -35,34 +35,37 @@ export const PAVIMENTO_MIN = 15;
 // ── Prezzi di ritiro, stato "come nuovo" (fonte: API Swappie IT, set 2026) ────
 // Da riverificare ogni 3-6 mesi: sono prezzi vivi, calano ~8-10% al trimestre.
 export const BASE = {
-  "iPhone 17 Pro Max": { 256: 1030, 512: 1142 },
-  "iPhone 17 Pro":     { 256: 917,  512: 1035 },
-  "iPhone 17":         { 256: 725,  512: 840 },
-  "iPhone 16 Pro Max": { 256: 740,  512: 851 },
-  "iPhone 16 Pro":     { 128: 655,  256: 700, 512: 800 },
-  "iPhone 16 Plus":    { 128: 575,  256: 650, 512: 705 },
-  "iPhone 16e":        { 128: 380,  256: 475, 512: 540 },
-  "iPhone 16":         { 128: 550,  256: 644, 512: 680 },
-  "iPhone 15 Pro Max": { 256: 600,  512: 655 },
-  "iPhone 15 Pro":     { 128: 511,  256: 580, 512: 624 },
-  "iPhone 15 Plus":    { 128: 411,  256: 497, 512: 510 },
-  "iPhone 15":         { 128: 390,  256: 460, 512: 515 },
-  "iPhone 14 Pro Max": { 128: 450,  256: 499, 512: 537 },
-  "iPhone 14 Pro":     { 128: 412,  256: 433, 512: 497 },
-  "iPhone 14 Plus":    { 128: 288,  256: 332, 512: 387 },
-  "iPhone 14":         { 128: 242,  256: 294, 512: 344 },
-  "iPhone 13 Pro Max": { 128: 329,  256: 369, 512: 394 },
-  "iPhone 13 Pro":     { 128: 305,  256: 332, 512: 368 },
-  "iPhone 13 Mini":    { 128: 176,  256: 192, 512: 318 },
-  "iPhone 13":         { 128: 200,  256: 226, 512: 300 },
-  "iPhone 12 Pro Max": { 128: 248,  256: 268, 512: 296 },
-  "iPhone 12 Pro":     { 128: 197,  256: 219, 512: 252 },
-  "iPhone 12 Mini":    { 64: 75,    128: 88,  256: 105 },
-  "iPhone 12":         { 64: 114,   128: 135, 256: 143 },
-  "iPhone 11 Pro Max": { 64: 160,   256: 197, 512: 226 },
-  "iPhone 11 Pro":     { 64: 109,   256: 149, 512: 202 },
-  "iPhone 11":         { 64: 87,    128: 111, 256: 142 },
-  "iPhone SE 2022":    { 64: 84,    128: 137, 256: 177 },
+  "iPhone 17 Pro Max": { 256: 1030, 512: 1142, 1024: 1261, 2048: 1395 },
+  "iPhone 17 Pro":     { 256: 917, 512: 1035, 1024: 1175 },
+  "iPhone 17":         { 256: 725, 512: 840 },
+  "iPhone 17e":        { 256: 540, 512: 675 },
+  "iPhone Air":        { 256: 625, 512: 695, 1024: 765 },
+  "iPhone 16 Pro Max": { 256: 740, 512: 851, 1024: 972 },
+  "iPhone 16 Pro":     { 128: 655, 256: 700, 512: 800, 1024: 905 },
+  "iPhone 16 Plus":    { 128: 575, 256: 650, 512: 705 },
+  "iPhone 16":         { 128: 550, 256: 644, 512: 680 },
+  "iPhone 16e":        { 128: 380, 256: 475, 512: 540 },
+  "iPhone 15 Pro Max": { 256: 600, 512: 655, 1024: 700 },
+  "iPhone 15 Pro":     { 128: 511, 256: 580, 512: 624, 1024: 720 },
+  "iPhone 15 Plus":    { 128: 411, 256: 497, 512: 510 },
+  "iPhone 15":         { 128: 390, 256: 460, 512: 515 },
+  "iPhone 14 Pro Max": { 128: 450, 256: 499, 512: 537, 1024: 561 },
+  "iPhone 14 Pro":     { 128: 412, 256: 433, 512: 497, 1024: 508 },
+  "iPhone 14 Plus":    { 128: 288, 256: 332, 512: 387 },
+  "iPhone 14":         { 128: 242, 256: 294, 512: 344 },
+  "iPhone 13 Pro Max": { 128: 329, 256: 369, 512: 394, 1024: 439 },
+  "iPhone 13 Pro":     { 128: 305, 256: 332, 512: 368, 1024: 389 },
+  "iPhone 13 mini":    { 128: 176, 256: 192, 512: 318 },
+  "iPhone 13":         { 128: 200, 256: 226, 512: 300 },
+  "iPhone 12 Pro Max": { 128: 248, 256: 268, 512: 296 },
+  "iPhone 12 Pro":     { 128: 197, 256: 219, 512: 252 },
+  "iPhone 12 mini":    { 64: 75, 128: 88, 256: 105 },
+  "iPhone 12":         { 64: 114, 128: 135, 256: 143 },
+  "iPhone 11 Pro Max": { 64: 160, 256: 197, 512: 226 },
+  "iPhone 11 Pro":     { 64: 109, 256: 149, 512: 202 },
+  "iPhone 11":         { 64: 87, 128: 111, 256: 142 },
+  "iPhone SE 2022":    { 64: 84, 128: 137, 256: 177 },
+  "iPhone SE 2020":    { 64: 40, 128: 62, 256: 90 },
 
   // Android: Swappie non li tratta. Questi vengono dalla vecchia tabella
   // PriceCore e NON sono verificati contro una fonte esterna. Da ricalibrare
@@ -85,7 +88,27 @@ export const BASE = {
 
 // Se il taglio esatto non e' in tabella, si scala da quello piu' vicino.
 // Moltiplicatori medi ricavati da Swappie: +17% per 256GB, +34% per 512GB.
-const SCALA_STORAGE = { 64: 0.88, 128: 1.0, 256: 1.17, 512: 1.34, 1024: 1.55 };
+const SCALA_STORAGE = { 64: 0.88, 128: 1.0, 256: 1.17, 512: 1.34, 1024: 1.55, 2048: 1.75 };
+
+// Elenco del menu a tendina. Sta qui e non in App.jsx perche' ogni voce deve
+// corrispondere a una chiave di BASE: il test lo verifica.
+// iPhone 8, X, XR, XS e XS Max sono esclusi di proposito: Swappie non li compra
+// piu' (quota 5 EUR fissi per tutti), quindi non c'e' un prezzo di riferimento.
+export const MODELLI = [
+  "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone 17", "iPhone 17e", "iPhone Air",
+  "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16", "iPhone 16e",
+  "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
+  "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
+  "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13", "iPhone 13 Mini",
+  "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12", "iPhone 12 Mini",
+  "iPhone 11 Pro Max", "iPhone 11 Pro", "iPhone 11",
+  "iPhone SE 2022", "iPhone SE 2020",
+  "Samsung Galaxy S24 Ultra", "Samsung Galaxy S24+", "Samsung Galaxy S24",
+  "Samsung Galaxy S23 Ultra", "Samsung Galaxy S23+", "Samsung Galaxy S23",
+  "Samsung Galaxy S22 Ultra", "Samsung Galaxy S22+", "Samsung Galaxy S22",
+  "Xiaomi 14 Ultra", "Xiaomi 14 Pro", "Xiaomi 13 Pro",
+  "Google Pixel 8 Pro", "Google Pixel 8", "Altro",
+];
 
 // ── Tier estetici (fonte: ladder Swappie LIKE_NEW -> MODERATE) ───────────────
 export const TIER = {
@@ -93,6 +116,45 @@ export const TIER = {
   ottimo:      { k: 0.93, label: "Segni minimi di usura" },
   buono:       { k: 0.86, label: "Segni di usura evidenti" },
   accettabile: { k: 0.76, label: "Molto segnato" },
+};
+
+// Quanto pesa l'usura estetica, per modello: [ottimo, buono, accettabile]
+// come frazione del prezzo "come nuovo". Non e' una costante: su un iPhone 17
+// i segni d'uso tolgono il 4%, su un SE 2020 il 35%. Sui telefoni vecchi ed
+// economici il costo fisso di ricondizionamento pesa molto di piu' sul prezzo.
+// Se il modello non e' in tabella si usano i valori generici di TIER.
+export const TIER_MODELLO = {
+  "iPhone 17 Pro Max": [0.965, 0.935, 0.891],
+  "iPhone 17 Pro":     [0.961, 0.919, 0.886],
+  "iPhone 17":         [0.962, 0.904, 0.869],
+  "iPhone 17e":        [0.96, 0.912, 0.85],
+  "iPhone Air":        [0.951, 0.912, 0.863],
+  "iPhone 16 Pro Max": [0.93, 0.856, 0.762],
+  "iPhone 16 Pro":     [0.934, 0.857, 0.751],
+  "iPhone 16 Plus":    [0.944, 0.873, 0.744],
+  "iPhone 16":         [0.953, 0.894, 0.795],
+  "iPhone 16e":        [0.961, 0.9, 0.769],
+  "iPhone 15 Pro Max": [0.93, 0.875, 0.78],
+  "iPhone 15 Pro":     [0.926, 0.845, 0.764],
+  "iPhone 15 Plus":    [0.922, 0.853, 0.754],
+  "iPhone 15":         [0.911, 0.856, 0.756],
+  "iPhone 14 Pro Max": [0.892, 0.789, 0.71],
+  "iPhone 14 Pro":     [0.905, 0.828, 0.753],
+  "iPhone 14 Plus":    [0.904, 0.797, 0.745],
+  "iPhone 14":         [0.919, 0.839, 0.77],
+  "iPhone 13 Pro Max": [0.9, 0.817, 0.767],
+  "iPhone 13 Pro":     [0.871, 0.768, 0.677],
+  "iPhone 13 mini":    [0.907, 0.84, 0.762],
+  "iPhone 13":         [0.914, 0.826, 0.754],
+  "iPhone 12 Pro Max": [0.858, 0.694, 0.631],
+  "iPhone 12 Pro":     [0.86, 0.763, 0.641],
+  "iPhone 12 mini":    [0.855, 0.656, 0.506],
+  "iPhone 12":         [0.842, 0.749, 0.641],
+  "iPhone 11 Pro Max": [0.759, 0.659, 0.523],
+  "iPhone 11 Pro":     [0.765, 0.664, 0.513],
+  "iPhone 11":         [0.827, 0.727, 0.565],
+  "iPhone SE 2022":    [0.753, 0.562, 0.436],
+  "iPhone SE 2020":    [0.651, 0.5, 0.273],
 };
 
 // ── Costi di riparazione in EURO (tarati su Swappie) ─────────────────────────
@@ -119,41 +181,86 @@ export const COSTI_RIPARAZIONE = {
 // SONO I COSTI DI SWAPPIE: coi tuoi costi di laboratorio reali questi numeri
 // scendono parecchio, e PriceCore puo' pagare i danneggiati piu' di Swappie.
 export const COSTO_SCHERMO = {
-  "iPhone 17 Pro Max": 353, "iPhone 17 Pro": 329, "iPhone 17": 317,
-  "iPhone 16 Pro Max": 293, "iPhone 16 Pro": 259, "iPhone 16 Plus": 196,
-  "iPhone 16e": 150, "iPhone 16": 120,
-  "iPhone 15 Pro Max": 233, "iPhone 15 Pro": 242, "iPhone 15 Plus": 175,
-  "iPhone 15": 144,
-  "iPhone 14 Pro Max": 212, "iPhone 14 Pro": 184, "iPhone 14 Plus": 158,
-  "iPhone 14": 100,
-  "iPhone 13 Pro Max": 179, "iPhone 13 Pro": 142, "iPhone 13 Mini": 117,
-  "iPhone 13": 93,
-  "iPhone 12 Pro Max": 145, "iPhone 12 Pro": 81, "iPhone 12 Mini": 57,
-  "iPhone 12": 64,
-  "iPhone 11 Pro Max": 81, "iPhone 11 Pro": 76, "iPhone 11": 43,
-  "iPhone SE 2022": 54,
+  "iPhone 17 Pro Max": 353,
+  "iPhone 17 Pro":     329,
+  "iPhone 17":         317,
+  "iPhone 17e":        307,
+  "iPhone Air":        260,
+  "iPhone 16 Pro Max": 293,
+  "iPhone 16 Pro":     259,
+  "iPhone 16 Plus":    196,
+  "iPhone 16":         120,
+  "iPhone 16e":        150,
+  "iPhone 15 Pro Max": 233,
+  "iPhone 15 Pro":     242,
+  "iPhone 15 Plus":    175,
+  "iPhone 15":         144,
+  "iPhone 14 Pro Max": 212,
+  "iPhone 14 Pro":     184,
+  "iPhone 14 Plus":    158,
+  "iPhone 14":         100,
+  "iPhone 13 Pro Max": 179,
+  "iPhone 13 Pro":     142,
+  "iPhone 13 mini":    117,
+  "iPhone 13":         93,
+  "iPhone 12 Pro Max": 145,
+  "iPhone 12 Pro":     81,
+  "iPhone 12 mini":    41,
+  "iPhone 12":         64,
+  "iPhone 11 Pro Max": 81,
+  "iPhone 11 Pro":     60,
+  "iPhone 11":         43,
+  "iPhone SE 2022":    38,
+  "iPhone SE 2020":    5,
 };
 
 export const COSTO_BATTERIA = {
-  "iPhone 17 Pro Max": 133, "iPhone 17 Pro": 129, "iPhone 17": 97,
-  "iPhone 16 Pro Max": 78, "iPhone 16 Pro": 74, "iPhone 16 Plus": 58,
-  "iPhone 16e": 60, "iPhone 16": 57,
-  "iPhone 15 Pro Max": 41, "iPhone 15 Pro": 40, "iPhone 15 Plus": 32,
-  "iPhone 15": 26,
-  "iPhone 14 Pro Max": 65, "iPhone 14 Pro": 36, "iPhone 14 Plus": 26,
-  "iPhone 14": 18,
-  "iPhone 13 Pro Max": 43, "iPhone 13 Pro": 29, "iPhone 13 Mini": 32,
-  "iPhone 13": 21,
-  "iPhone 12 Pro Max": 48, "iPhone 12 Pro": 24, "iPhone 12 Mini": 31,
-  "iPhone 12": 22,
-  "iPhone 11 Pro Max": 26, "iPhone 11 Pro": 24, "iPhone 11": 15,
-  "iPhone SE 2022": 12,
+  "iPhone 17 Pro Max": 133,
+  "iPhone 17 Pro":     129,
+  "iPhone 17":         97,
+  "iPhone 17e":        87,
+  "iPhone Air":        110,
+  "iPhone 16 Pro Max": 78,
+  "iPhone 16 Pro":     74,
+  "iPhone 16 Plus":    58,
+  "iPhone 16":         57,
+  "iPhone 16e":        60,
+  "iPhone 15 Pro Max": 41,
+  "iPhone 15 Pro":     40,
+  "iPhone 15 Plus":    32,
+  "iPhone 15":         25,
+  "iPhone 14 Pro Max": 65,
+  "iPhone 14 Pro":     36,
+  "iPhone 14 Plus":    26,
+  "iPhone 14":         18,
+  "iPhone 13 Pro Max": 43,
+  "iPhone 13 Pro":     29,
+  "iPhone 13 mini":    32,
+  "iPhone 13":         21,
+  "iPhone 12 Pro Max": 48,
+  "iPhone 12 Pro":     24,
+  "iPhone 12 mini":    31,
+  "iPhone 12":         22,
+  "iPhone 11 Pro Max": 26,
+  "iPhone 11 Pro":     24,
+  "iPhone 11":         15,
+  "iPhone SE 2022":    12,
+  "iPhone SE 2020":    5,
 };
 
-function perModello(tabella, modello = "") {
-  const k = Object.keys(tabella)
-    .filter(x => modello.includes(x))
+// Cerca la chiave piu' specifica che compare nel nome del modello, ignorando
+// maiuscole e minuscole: la tabella segue la grafia di Swappie ("iPhone 13
+// mini") mentre il menu dell'app usa la sua ("iPhone 13 Mini"), e un match
+// sensibile alle maiuscole cadrebbe in silenzio sull'"iPhone 13" liscio.
+function chiavePerModello(tabella, modello = "") {
+  const m = String(modello).toLowerCase();
+  return Object.keys(tabella)
+    .filter(k => m.includes(k.toLowerCase()))
     .sort((a, b) => b.length - a.length)[0];
+}
+
+function perModello(tabella, modello = "") {
+  const k = chiavePerModello(tabella, modello);
   return k ? tabella[k] : null;
 }
 
@@ -192,9 +299,7 @@ function parseStorage(gb) {
 export function baseComeNuovo(modello, gb) {
   if (!modello) return 0;
   const storage = parseStorage(gb);
-  const chiave = Object.keys(BASE)
-    .filter(k => modello.includes(k))
-    .sort((a, b) => b.length - a.length)[0];          // match piu' specifico
+  const chiave = chiavePerModello(BASE, modello);
   if (!chiave) return 0;
 
   const tabella = BASE[chiave];
@@ -257,7 +362,13 @@ export function calcolaValore(base, r = {}) {
   if (scocca.includes("segni evidenti")) peggiora("buono");
   if (scocca.includes("molto danneggiata")) peggiora("accettabile");
 
-  const k = TIER[tier].k;
+  // Il peso dell'usura cambia molto da modello a modello: si usa il valore
+  // specifico quando c'e', altrimenti quello generico.
+  const perModelloTier = perModello(TIER_MODELLO, modello);
+  const indice = ORDINE.indexOf(tier) - 1;   // comeNuovo = -1 -> nessuno sconto
+  const k = indice < 0
+    ? 1
+    : (perModelloTier ? perModelloTier[indice] : TIER[tier].k);
   let prezzo = base * k;
   if (k < 1) {
     voci.push(`Stato estetico "${TIER[tier].label}": −€${Math.round(base - prezzo)}`);
