@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { baseComeNuovo, calcolaValore } from "./motorePrezzi";
 
 const ORANGE = "#ff6a00";
 const DARK = "#0a0a0a";
@@ -19,117 +20,6 @@ const MODELS = [
   "Xiaomi 14 Ultra", "Xiaomi 14 Pro", "Xiaomi 13 Pro", "Google Pixel 8 Pro", "Google Pixel 8", "Altro"
 ];
 
-// ---- MOTORE DI DEPREZZAMENTO ----
-function calcolaValore(gradoA, d) {
-  let val = gradoA;
-  const list = [];
-  const pct = (label, p) => {
-    const before = val;
-    val = val * (1 - p);
-    list.push(`${label}: -${Math.round(p * 100)}% (−€${Math.round(before - val)})`);
-  };
-  const eur = (label, e) => {
-    val = Math.max(0, val - e);
-    list.push(`${label}: −€${e}`);
-  };
-
-  // Blocchi gravi
-  if (d.imei?.includes("No")) pct("IMEI non leggibile", 0.70);
-  if (d.internet?.includes("No")) pct("Non si collega a internet", 0.80);
-  if (d.schedamadre?.includes("Sì")) pct("Interventi su scheda madre", 0.80);
-  if (d.faceid?.includes("No")) pct("Face ID non funzionante", 0.80);
-
-  // Batteria
-  if (d.batt?.includes("90")) pct("Batteria 90-100%", 0.02);
-  else if (d.batt?.includes("80")) pct("Batteria 80-89% (da sostituire)", 0.17);
-  else if (d.batt?.includes("70-79")) pct("Batteria 70-79% (da sostituire)", 0.22);
-  else if (d.batt?.includes("Meno")) pct("Batteria sotto il 70% (da sostituire)", 0.22);
-
-  // Schermo
-  if (d.schermo?.includes("Piccoli graffi")) pct("Schermo con piccoli graffi", 0.09);
-  else if (d.schermo?.includes("Crepe")) pct("Schermo crepato o rotto", 0.47);
-
-  // Scocca
-  if (d.scocca?.includes("Nessun danno")) pct("Scocca: usura fisiologica", 0.02);
-  else if (d.scocca?.includes("segni lievi")) pct("Scocca con segni lievi", 0.07);
-  else if (d.scocca?.includes("segni evidenti")) pct("Scocca con segni evidenti", 0.32);
-  else if (d.scocca?.includes("molto danneggiata")) pct("Scocca molto danneggiata o piegata", 0.32);
-
-  // Altoparlante
-  if (d.altoparlante?.includes("basso")) pct("Altoparlante con volume basso", 0.05);
-  else if (d.altoparlante?.includes("Gracchia")) pct("Altoparlante gracchiante o rotto", 0.20);
-
-  // Connettore
-  if (d.conn?.includes("intermittenti")) pct("Connettore intermittente", 0.05);
-  else if (d.conn?.includes("Non funziona")) pct("Connettore di ricarica non funzionante", 0.22);
-
-  // Altri danni (euro fissi)
-  const dn = d.danni || [];
-  if (dn.some(x => x.includes("acqua"))) eur("Contatto con liquidi", 100);
-  if (dn.some(x => x.includes("Scocca sostituita"))) eur("Scocca sostituita", 60);
-  if (dn.some(x => x.includes("Tasti"))) eur("Tasti laterali difettosi", 30);
-  if (dn.some(x => x.includes("Microfono"))) eur("Microfono difettoso", 30);
-  if (dn.some(x => x.includes("Fotocamera"))) eur("Fotocamera difettosa", 40);
-
-  // Ricondizionato
-  if (d.acq?.includes("Ricondizionato")) pct("Acquistato ricondizionato", 0.10);
-
-  const finale = Math.max(30, Math.round(val));
-  const ratio = gradoA > 0 ? finale / gradoA : 0;
-  const grado = ratio >= 0.85 ? "A" : ratio >= 0.62 ? "B" : ratio >= 0.38 ? "C" : "D";
-  return { finale, deprezzamenti: list, grado, ratio };
-}
-
-// Valore base di riferimento per la stima live (prima della risposta AI)
-function baseGradoA(modello, gb) {
-  if (!modello) return 0;
-  let base = 250;
-  const m = modello;
-  if (m.includes("16 Pro Max")) base = 950;
-  else if (m.includes("16 Pro")) base = 800;
-  else if (m.includes("16 Plus")) base = 650;
-  else if (m.includes("16")) base = 580;
-  else if (m.includes("15 Pro Max")) base = 780;
-  else if (m.includes("15 Pro")) base = 650;
-  else if (m.includes("15 Plus")) base = 520;
-  else if (m.includes("15")) base = 460;
-  else if (m.includes("14 Pro Max")) base = 620;
-  else if (m.includes("14 Pro")) base = 520;
-  else if (m.includes("14 Plus")) base = 400;
-  else if (m.includes("14")) base = 350;
-  else if (m.includes("13 Pro Max")) base = 480;
-  else if (m.includes("13 Pro")) base = 400;
-  else if (m.includes("13 Mini")) base = 250;
-  else if (m.includes("13")) base = 290;
-  else if (m.includes("12 Pro Max")) base = 340;
-  else if (m.includes("12 Pro")) base = 280;
-  else if (m.includes("12 Mini")) base = 170;
-  else if (m.includes("12")) base = 210;
-  else if (m.includes("11 Pro Max")) base = 250;
-  else if (m.includes("11 Pro")) base = 210;
-  else if (m.includes("11")) base = 160;
-  else if (m.includes("SE 2022")) base = 130;
-  else if (m.includes("S24 Ultra")) base = 700;
-  else if (m.includes("S24+")) base = 500;
-  else if (m.includes("S24")) base = 420;
-  else if (m.includes("S23 Ultra")) base = 520;
-  else if (m.includes("S23+")) base = 380;
-  else if (m.includes("S23")) base = 320;
-  else if (m.includes("S22 Ultra")) base = 350;
-  else if (m.includes("S22+")) base = 260;
-  else if (m.includes("S22")) base = 220;
-  else if (m.includes("Xiaomi 14 Ultra")) base = 550;
-  else if (m.includes("Xiaomi 14 Pro")) base = 400;
-  else if (m.includes("Xiaomi 13 Pro")) base = 300;
-  else if (m.includes("Pixel 8 Pro")) base = 450;
-  else if (m.includes("Pixel 8")) base = 320;
-
-  if (gb === "256 GB") base += Math.round(base * 0.10);
-  if (gb === "512 GB") base += Math.round(base * 0.22);
-  if (gb === "1 TB") base += Math.round(base * 0.35);
-  if (gb === "64 GB") base -= Math.round(base * 0.06);
-  return base;
-}
 
 function parseEuro(str) {
   if (!str) return 0;
@@ -182,9 +72,12 @@ Fornisci il valore di mercato reale. Rispondi SOLO con questo JSON:
       const json = await res.json();
       const text = (json.content || []).find(b => b.type === "text")?.text || "";
       const ai = JSON.parse(text.replace(/```json|```/g, "").trim());
-      const gradoA = parseEuro(ai.valore_grado_a) || baseGradoA(data.modello, data.gb);
-      const calc = calcolaValore(gradoA, data);
-      setResult({ ...ai, gradoA, ...calc });
+      // La tabella prezzi ha la precedenza: e' verificata contro Swappie ed e'
+      // riproducibile. Il valore dell'AI serve solo da rete di sicurezza per i
+      // modelli fuori tabella (es. "Altro"), dove non abbiamo un riferimento.
+      const base = baseComeNuovo(data.modello, data.gb) || parseEuro(ai.valore_grado_a);
+      const calc = calcolaValore(base, data);
+      setResult({ ...ai, gradoA: base, ...calc });
       setTimeout(() => setShowDonate(true), 2500);
     } catch (e) {
       setError("Errore: " + e.message);
@@ -195,7 +88,8 @@ Fornisci il valore di mercato reale. Rispondi SOLO con questo JSON:
   const reset = () => { setStep(0); setData({}); setResult(null); setShowDonate(false); };
   const gradeColor = (g = "") => g === "A" ? "#4caf50" : g === "B" ? ORANGE : g === "C" ? "#ff9800" : "#f44336";
 
-  const liveCalc = data.modello ? calcolaValore(baseGradoA(data.modello, data.gb), data) : null;
+  const liveBase = baseComeNuovo(data.modello, data.gb);
+  const liveCalc = liveBase > 0 ? calcolaValore(liveBase, data) : null;
 
   const scaricaPDF = () => {
     const d = result; if (!d) return;
@@ -286,6 +180,7 @@ Fornisci il valore di mercato reale. Rispondi SOLO con questo JSON:
     { title: "Condizione dello schermo", sub: "Controlla graffi, crepe e scheggiature sul vetro.",
       content: [{ label: "✅ Perfetto, come nuovo", color: "#4caf50" },
         { label: "🔍 Piccoli graffi visibili", color: ORANGE },
+        { label: "🔦 Vetro molto graffiato", color: "#ff9800" },
         { label: "💥 Crepe o rotture evidenti", color: "#f44336" }]
         .map(o => <Pill key={o.label} label={o.label} color={o.color} selected={data.schermo === o.label} onClick={() => update("schermo", o.label)} />),
       valid: () => !!data.schermo },
