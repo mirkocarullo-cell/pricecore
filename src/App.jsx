@@ -174,6 +174,7 @@ Fornisci il valore di mercato reale. Rispondi SOLO con questo JSON:
     { title: "Segni sulla scocca", sub: "Ispeziona il retro e i lati del dispositivo.",
       content: [
         { label: "✅ Nessun danno (come nuova)", desc: "La scocca è integra, come appena uscita dalla scatola.", color: "#4caf50" },
+        { label: "✨ Scocca con segni minimi", desc: "Graffi che non si notano a prima vista, si vedono solo girandola sotto una luce diretta.", color: "#8bc34a" },
         { label: "🔍 Scocca con segni lievi", desc: "Piccole ammaccature o graffi lievi appena visibili.", color: ORANGE },
         { label: "⚠️ Scocca con segni evidenti", desc: "Segni evidenti di cadute o graffi profondi.", color: "#ff9800" },
         { label: "💥 Scocca molto danneggiata o piegata", desc: "Deformazioni importanti, scocca compromessa.", color: "#f44336" }]

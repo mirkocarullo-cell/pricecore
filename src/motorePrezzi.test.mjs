@@ -41,6 +41,7 @@ const BATT_75 = "🟠 70–79%";
 const GRAFFI = "🔍 Piccoli graffi visibili";
 const GRAFFIATO = "🔦 Vetro molto graffiato";
 const CREPATO = "💥 Crepe o rotture evidenti";
+const SCOCCA_MINIMI = "✨ Scocca con segni minimi";
 const SCOCCA_LIEVI = "🔍 Scocca con segni lievi";
 
 const casi = [
@@ -89,6 +90,15 @@ const casi = [
     modello: "iPhone 15 Pro", gb: "256 GB",
     r: { schermo: CREPATO, scocca: SCOCCA_LIEVI },
     swappie: 263.63, nota: "ALMOST_NEW + BROKEN_SCREEN da API",
+  },
+  {
+    // Preventivo reale portato da Mirko il 28/09/2026. Con la vecchia scala la
+    // scocca saltava da 0% a -8,9%: rispondendo "nessun danno" PriceCore dava
+    // 262 EUR contro i 261 di Swappie, cioe' zero margine.
+    nome: "iPhone 15 256GB — batt 89% + vetro graffiato + scocca segni MINIMI",
+    modello: "iPhone 15", gb: "256 GB",
+    r: { batt: BATT_85, schermo: GRAFFIATO, scocca: SCOCCA_MINIMI },
+    swappie: 261, nota: "preventivo reale Swappie del 28/09/2026",
   },
   {
     nome: "iPhone 14 128GB — IMEI non leggibile (solo ricambi)",
@@ -162,6 +172,7 @@ const peggioramenti = [
   ["graffi lievi", { schermo: GRAFFI }],
   ["vetro molto graffiato", { schermo: GRAFFIATO }],
   ["schermo crepato", { schermo: CREPATO }],
+  ["scocca segni minimi", { scocca: SCOCCA_MINIMI }],
   ["scocca segni lievi", { scocca: SCOCCA_LIEVI }],
   ["scocca segni evidenti", { scocca: "⚠️ Scocca con segni evidenti" }],
   ["scocca piegata", { scocca: "💥 Scocca molto danneggiata o piegata" }],
@@ -199,6 +210,28 @@ console.log(
     ? "Tutti i casi entro il range [-15%, 0%] rispetto a Swappie."
     : `${fuoriRange} caso/i fuori dal range [-15%, 0%] rispetto a Swappie.`
 );
+
+// La scala estetica deve scendere a gradini regolari. Se fra due risposte
+// vicine si apre un salto grosso, chi ha il telefono in mezzo viene pagato o
+// troppo o troppo poco: e' quello che succedeva prima di "segni minimi", dove
+// si passava da 0% a -8,9% di colpo.
+const SCALA_SCOCCA = [
+  "✅ Nessun danno (come nuova)",
+  SCOCCA_MINIMI,
+  SCOCCA_LIEVI,
+  "⚠️ Scocca con segni evidenti",
+  "💥 Scocca molto danneggiata o piegata",
+];
+const prezziScala = SCALA_SCOCCA.map(s =>
+  calcolaValore(b15, { ...PERFETTO, modello: "iPhone 15", scocca: s }).finale);
+const salti = [];
+for (let i = 1; i < prezziScala.length; i++) {
+  const passo = prezziScala[i - 1] - prezziScala[i];
+  if (passo <= 0) salti.push(`"${SCALA_SCOCCA[i]}" non abbassa il prezzo`);
+}
+console.log(salti.length
+  ? salti.map(s => "  " + s).join("\n")
+  : `Scala scocca monotona: ${prezziScala.map(p => "€" + p).join(" > ")}`);
 
 // Copertura: ogni voce del menu deve trovare un prezzo in tabella, per ogni
 // taglio offerto dall'app. Intercetta i modelli aggiunti al menu e dimenticati

@@ -118,12 +118,21 @@ export const MODELLI = [
 ];
 
 // ── Tier estetici (fonte: ladder Swappie LIKE_NEW -> MODERATE) ───────────────
+// L'ordine conta: peggiora() puo' solo scendere lungo questa scala.
 export const TIER = {
   comeNuovo:   { k: 1.0,  label: "Come nuovo" },
+  quasiNuovo:  { k: 0.98, label: "Segni appena percettibili" },
   ottimo:      { k: 0.93, label: "Segni minimi di usura" },
   buono:       { k: 0.86, label: "Segni di usura evidenti" },
   accettabile: { k: 0.76, label: "Molto segnato" },
 };
+
+// "quasiNuovo" non ha una colonna in TIER_MODELLO: vale un terzo dello sconto
+// di "ottimo". Misurato su iPhone 15 256GB, dove Swappie toglie 12 EUR per i
+// segni minimi e 36 per quelli lievi, esattamente un terzo. Senza questo
+// gradino la scala saltava da 0% a -8,9% e un telefono quasi nuovo ma non
+// perfetto finiva pagato quanto uno immacolato.
+const FRAZIONE_QUASI_NUOVO = 1 / 3;
 
 // Quanto pesa l'usura estetica, per modello: [ottimo, buono, accettabile]
 // come frazione del prezzo "come nuovo". Non e' una costante: su un iPhone 17
@@ -330,7 +339,7 @@ export function calcolaValore(base, r = {}) {
   const modello = r.modello || "";
   const voci = [];
   let tier = "comeNuovo";
-  const ORDINE = ["comeNuovo", "ottimo", "buono", "accettabile"];
+  const ORDINE = Object.keys(TIER);   // dal migliore al peggiore
   const peggiora = (t) => {
     if (ORDINE.indexOf(t) > ORDINE.indexOf(tier)) tier = t;
   };
@@ -365,6 +374,7 @@ export function calcolaValore(base, r = {}) {
   const schermo = q("schermo");
   const scocca = q("scocca");
   if (schermo.includes("piccoli graffi")) peggiora("ottimo");
+  if (scocca.includes("segni minimi")) peggiora("quasiNuovo");
   if (scocca.includes("segni lievi")) peggiora("ottimo");
   if (scocca.includes("segni evidenti")) peggiora("buono");
   if (scocca.includes("molto danneggiata")) peggiora("accettabile");
@@ -372,10 +382,17 @@ export function calcolaValore(base, r = {}) {
   // Il peso dell'usura cambia molto da modello a modello: si usa il valore
   // specifico quando c'e', altrimenti quello generico.
   const perModelloTier = perModello(TIER_MODELLO, modello);
-  const indice = ORDINE.indexOf(tier) - 1;   // comeNuovo = -1 -> nessuno sconto
-  const k = indice < 0
-    ? 1
-    : (perModelloTier ? perModelloTier[indice] : TIER[tier].k);
+  const kOttimo = perModelloTier ? perModelloTier[0] : TIER.ottimo.k;
+  let k;
+  if (tier === "comeNuovo") {
+    k = 1;
+  } else if (tier === "quasiNuovo") {
+    k = 1 - (1 - kOttimo) * FRAZIONE_QUASI_NUOVO;
+  } else {
+    // ottimo / buono / accettabile -> colonne 0, 1, 2 di TIER_MODELLO
+    const indice = ORDINE.indexOf(tier) - 2;
+    k = perModelloTier ? perModelloTier[indice] : TIER[tier].k;
+  }
   let prezzo = base * k;
   if (k < 1) {
     voci.push(`Stato estetico "${TIER[tier].label}": −€${Math.round(base - prezzo)}`);
