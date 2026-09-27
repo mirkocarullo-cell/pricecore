@@ -5,7 +5,19 @@
 // /api/sell/api/v3/prices/ e dal wizard di vendita. Vanno riaggiornati
 // quando si ricalibra la tabella BASE.
 
-import { baseComeNuovo, calcolaValore, MARGINE, MODELLI } from "./motorePrezzi.js";
+import { baseComeNuovo, calcolaValore, MARGINE, MODELLI, DATA_TABELLA } from "./motorePrezzi.js";
+
+// I prezzi Swappie si muovono in fretta sui modelli recenti: fra il 20 e il 28
+// settembre 2026 l'iPhone 16 Pro Max 256GB e' calato del 10,8% in otto giorni.
+// Con la tabella ferma, il margine del 5% si azzera in un paio di settimane e
+// PriceCore finisce a pagare piu' di Swappie senza che nessuno se ne accorga.
+const GIORNI_TABELLA = Math.floor((Date.now() - Date.parse(DATA_TABELLA)) / 86400000);
+if (GIORNI_TABELLA > 30) {
+  console.log(`\n⚠  La tabella prezzi ha ${GIORNI_TABELLA} giorni (${DATA_TABELLA}).`);
+  console.log("   Rigenerala: scripts/estrai-swappie.js nel browser, poi");
+  console.log("   node scripts/aggiorna-prezzi.mjs");
+  console.log("   I valori Swappie qui sotto sono di quella data, non di oggi.");
+}
 
 // Etichette copiate alla lettera dalle domande di App.jsx: il motore fa match
 // su queste stringhe, quindi il test deve usare esattamente le stesse.
@@ -76,7 +88,7 @@ const casi = [
     nome: "iPhone 15 Pro 256GB — schermo crepato, scocca segni lievi",
     modello: "iPhone 15 Pro", gb: "256 GB",
     r: { schermo: CREPATO, scocca: SCOCCA_LIEVI },
-    swappie: 283.63, nota: "ALMOST_NEW + BROKEN_SCREEN da API",
+    swappie: 263.63, nota: "ALMOST_NEW + BROKEN_SCREEN da API",
   },
   {
     nome: "iPhone 14 128GB — IMEI non leggibile (solo ricambi)",
@@ -90,7 +102,7 @@ const casi = [
   // che sui modelli vecchi, dove l'usura estetica pesa molto di piu'.
   // Riferimento Swappie: ALMOST_NEW + BATTERY_ISSUE.
   ...[
-    ["iPhone 17 Pro Max", "256 GB", 836.31],
+    ["iPhone 17 Pro Max", "256 GB", 786.31],
     ["iPhone Air", "256 GB", 459.26],
     ["iPhone 16", "128 GB", 446.69],
     ["iPhone 16e", "128 GB", 280.53],

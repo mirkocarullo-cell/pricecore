@@ -32,21 +32,28 @@ export const PRESA_IN_CARICO = 15;
 export const PAVIMENTO_PCT = 0.075;
 export const PAVIMENTO_MIN = 15;
 
-// ── Prezzi di ritiro, stato "come nuovo" (fonte: API Swappie IT, set 2026) ────
-// Da riverificare ogni 3-6 mesi: sono prezzi vivi, calano ~8-10% al trimestre.
+// Data della fotografia dei prezzi Swappie da cui derivano le tabelle qui sotto.
+// La aggiorna scripts/aggiorna-prezzi.mjs; il test avvisa quando invecchia.
+export const DATA_TABELLA = "2026-09-28";
+
+// ── Prezzi di ritiro, stato "come nuovo" (fonte: API Swappie IT) ─────────────
+// I prezzi dei modelli recenti si muovono in fretta: fra il 20 e il 28 settembre
+// 2026 l'iPhone 16 Pro Max 256GB e' calato del 10,8% in otto giorni, mentre
+// l'iPhone 11 e il 13 non si sono mossi. Vanno rinfrescati almeno ogni mese,
+// altrimenti sui top di gamma PriceCore finisce a pagare piu' di Swappie.
 export const BASE = {
-  "iPhone 17 Pro Max": { 256: 1030, 512: 1142, 1024: 1261, 2048: 1395 },
-  "iPhone 17 Pro":     { 256: 917, 512: 1035, 1024: 1175 },
+  "iPhone 17 Pro Max": { 256: 970, 512: 1112, 1024: 1246, 2048: 1380 },
+  "iPhone 17 Pro":     { 256: 882, 512: 1000, 1024: 1160 },
   "iPhone 17":         { 256: 725, 512: 840 },
   "iPhone 17e":        { 256: 540, 512: 675 },
   "iPhone Air":        { 256: 625, 512: 695, 1024: 765 },
-  "iPhone 16 Pro Max": { 256: 740, 512: 851, 1024: 972 },
-  "iPhone 16 Pro":     { 128: 655, 256: 700, 512: 800, 1024: 905 },
-  "iPhone 16 Plus":    { 128: 575, 256: 650, 512: 705 },
+  "iPhone 16 Pro Max": { 256: 660, 512: 801, 1024: 922 },
+  "iPhone 16 Pro":     { 128: 585, 256: 650, 512: 770, 1024: 875 },
+  "iPhone 16 Plus":    { 128: 565, 256: 650, 512: 705 },
   "iPhone 16":         { 128: 550, 256: 644, 512: 680 },
   "iPhone 16e":        { 128: 380, 256: 475, 512: 540 },
-  "iPhone 15 Pro Max": { 256: 600, 512: 655, 1024: 700 },
-  "iPhone 15 Pro":     { 128: 511, 256: 580, 512: 624, 1024: 720 },
+  "iPhone 15 Pro Max": { 256: 580, 512: 655, 1024: 700 },
+  "iPhone 15 Pro":     { 128: 501, 256: 560, 512: 624, 1024: 720 },
   "iPhone 15 Plus":    { 128: 411, 256: 497, 512: 510 },
   "iPhone 15":         { 128: 390, 256: 460, 512: 515 },
   "iPhone 14 Pro Max": { 128: 450, 256: 499, 512: 537, 1024: 561 },
@@ -124,18 +131,18 @@ export const TIER = {
 // economici il costo fisso di ricondizionamento pesa molto di piu' sul prezzo.
 // Se il modello non e' in tabella si usano i valori generici di TIER.
 export const TIER_MODELLO = {
-  "iPhone 17 Pro Max": [0.965, 0.935, 0.891],
-  "iPhone 17 Pro":     [0.961, 0.919, 0.886],
+  "iPhone 17 Pro Max": [0.966, 0.937, 0.892],
+  "iPhone 17 Pro":     [0.96, 0.92, 0.887],
   "iPhone 17":         [0.962, 0.904, 0.869],
   "iPhone 17e":        [0.96, 0.912, 0.85],
   "iPhone Air":        [0.951, 0.912, 0.863],
-  "iPhone 16 Pro Max": [0.93, 0.856, 0.762],
-  "iPhone 16 Pro":     [0.934, 0.857, 0.751],
-  "iPhone 16 Plus":    [0.944, 0.873, 0.744],
+  "iPhone 16 Pro Max": [0.925, 0.845, 0.743],
+  "iPhone 16 Pro":     [0.93, 0.848, 0.738],
+  "iPhone 16 Plus":    [0.944, 0.872, 0.742],
   "iPhone 16":         [0.953, 0.894, 0.795],
   "iPhone 16e":        [0.961, 0.9, 0.769],
-  "iPhone 15 Pro Max": [0.93, 0.875, 0.78],
-  "iPhone 15 Pro":     [0.926, 0.845, 0.764],
+  "iPhone 15 Pro Max": [0.929, 0.874, 0.778],
+  "iPhone 15 Pro":     [0.925, 0.843, 0.761],
   "iPhone 15 Plus":    [0.922, 0.853, 0.754],
   "iPhone 15":         [0.911, 0.856, 0.756],
   "iPhone 14 Pro Max": [0.892, 0.789, 0.71],
