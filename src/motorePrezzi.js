@@ -20,8 +20,13 @@
 // costi reali di laboratorio, e' li' che hai un vantaggio che loro non hanno.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Quanto PriceCore offre rispetto a Swappie. 0.95 = 5% sotto.
-export const MARGINE = 0.95;
+// Quanto PriceCore offre rispetto a Swappie. 0.90 = 10% sotto.
+// Era 0.95, ma il 5% non bastava ad assorbire due cose: i prezzi Swappie che
+// si muovono fra un aggiornamento e l'altro, e il fatto che la base e' il loro
+// prezzo per lo stato "come nuovo", che vuol dire immacolato. Un telefono
+// quasi perfetto qui non paga nulla di estetico mentre Swappie qualcosa toglie
+// comunque, e con il 5% si finiva sopra di loro.
+export const MARGINE = 0.90;
 
 // Costo fisso di presa in carico, applicato una volta se serve almeno una
 // riparazione (Swappie applica ~16-18 EUR: logistica + manodopera di base).
