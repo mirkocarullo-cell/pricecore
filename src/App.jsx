@@ -164,11 +164,11 @@ Fornisci il valore di mercato reale. Rispondi SOLO con questo JSON:
       valid: () => !!data.batt },
 
     { title: "Condizione dello schermo", sub: "Controlla graffi, crepe e scheggiature sul vetro.",
-      content: [{ label: "✅ Perfetto, come nuovo", color: "#4caf50" },
-        { label: "🔍 Piccoli graffi visibili", color: ORANGE },
-        { label: "🔦 Vetro molto graffiato", color: "#ff9800" },
-        { label: "💥 Crepe o rotture evidenti", color: "#f44336" }]
-        .map(o => <Pill key={o.label} label={o.label} color={o.color} selected={data.schermo === o.label} onClick={() => update("schermo", o.label)} />),
+      content: [{ label: "✅ Perfetto, come nuovo", desc: "Nessun graffio, nemmeno inclinando lo schermo sotto una luce diretta.", color: "#4caf50" },
+        { label: "🔍 Piccoli graffi visibili", desc: "Graffi leggeri che si notano solo inclinando lo schermo alla luce. Passando l'unghia non si sentono.", color: ORANGE },
+        { label: "🔦 Vetro molto graffiato", desc: "Graffi ben visibili anche senza luce diretta, oppure che si sentono con l'unghia. Il vetro va sostituito.", color: "#ff9800" },
+        { label: "💥 Crepe o rotture evidenti", desc: "Una o più crepe o scheggiature, anche piccole, sui bordi o sulla superficie.", color: "#f44336" }]
+        .map(o => <Pill key={o.label} label={o.label} desc={o.desc} color={o.color} selected={data.schermo === o.label} onClick={() => update("schermo", o.label)} />),
       valid: () => !!data.schermo },
 
     { title: "Segni sulla scocca", sub: "Ispeziona il retro e i lati del dispositivo.",
