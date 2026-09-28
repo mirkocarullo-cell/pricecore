@@ -165,8 +165,7 @@ Fornisci il valore di mercato reale. Rispondi SOLO con questo JSON:
 
     { title: "Condizione dello schermo", sub: "Controlla graffi, crepe e scheggiature sul vetro.",
       content: [{ label: "✅ Perfetto, come nuovo", desc: "Nessun graffio, nemmeno inclinando lo schermo sotto una luce diretta.", color: "#4caf50" },
-        { label: "🔍 Piccoli graffi visibili", desc: "Graffi leggeri che si notano solo inclinando lo schermo alla luce. Passando l'unghia non si sentono.", color: ORANGE },
-        { label: "🔦 Vetro molto graffiato", desc: "Graffi ben visibili anche senza luce diretta, oppure che si sentono con l'unghia. Il vetro va sostituito.", color: "#ff9800" },
+        { label: "🔍 Graffi visibili", desc: "Graffi che si notano sul vetro. Il vetro va sostituito.", color: "#ff9800" },
         { label: "💥 Crepe o rotture evidenti", desc: "Una o più crepe o scheggiature, anche piccole, sui bordi o sulla superficie.", color: "#f44336" }]
         .map(o => <Pill key={o.label} label={o.label} desc={o.desc} color={o.color} selected={data.schermo === o.label} onClick={() => update("schermo", o.label)} />),
       valid: () => !!data.schermo },
@@ -174,7 +173,6 @@ Fornisci il valore di mercato reale. Rispondi SOLO con questo JSON:
     { title: "Segni sulla scocca", sub: "Ispeziona il retro e i lati del dispositivo.",
       content: [
         { label: "✅ Nessun danno (come nuova)", desc: "La scocca è integra, come appena uscita dalla scatola.", color: "#4caf50" },
-        { label: "✨ Scocca con segni minimi", desc: "Graffi che non si notano a prima vista, si vedono solo girandola sotto una luce diretta.", color: "#8bc34a" },
         { label: "🔍 Scocca con segni lievi", desc: "Piccole ammaccature o graffi lievi appena visibili.", color: ORANGE },
         { label: "⚠️ Scocca con segni evidenti", desc: "Segni evidenti di cadute o graffi profondi.", color: "#ff9800" },
         { label: "💥 Scocca molto danneggiata o piegata", desc: "Deformazioni importanti, scocca compromessa.", color: "#f44336" }]

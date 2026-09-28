@@ -38,10 +38,8 @@ const PERFETTO = {
 
 const BATT_85 = "🟡 80–89%";
 const BATT_75 = "🟠 70–79%";
-const GRAFFI = "🔍 Piccoli graffi visibili";
-const GRAFFIATO = "🔦 Vetro molto graffiato";
+const GRAFFIATO = "🔍 Graffi visibili";
 const CREPATO = "💥 Crepe o rotture evidenti";
-const SCOCCA_MINIMI = "✨ Scocca con segni minimi";
 const SCOCCA_LIEVI = "🔍 Scocca con segni lievi";
 
 const casi = [
@@ -59,7 +57,7 @@ const casi = [
   {
     nome: "iPhone 15 256GB — batt 85% + graffi lievi + scocca segni lievi",
     modello: "iPhone 15", gb: "256 GB",
-    r: { batt: BATT_85, schermo: GRAFFI, scocca: SCOCCA_LIEVI },
+    r: { batt: BATT_85, schermo: "✅ Perfetto, come nuovo", scocca: SCOCCA_LIEVI },
     swappie: 380.08, nota: "460 -36 estetica -17,92 -26 batteria",
   },
   {
@@ -91,14 +89,21 @@ const casi = [
     r: { schermo: CREPATO, scocca: SCOCCA_LIEVI },
     swappie: 263.63, nota: "ALMOST_NEW + BROKEN_SCREEN da API",
   },
+  // I due preventivi reali portati da Mirko il 28/09/2026. Su Swappie i lati e
+  // il retro erano "minimi segni di usura"; qui la scocca ha tre gradini soli,
+  // e il piu' vicino e' "nessun danno". Sono i casi piu' scomodi che abbiamo:
+  // il telefono e' quasi nuovo ma non perfetto, e il margine si assottiglia.
   {
-    // Preventivo reale portato da Mirko il 28/09/2026. Con la vecchia scala la
-    // scocca saltava da 0% a -8,9%: rispondendo "nessun danno" PriceCore dava
-    // 262 EUR contro i 261 di Swappie, cioe' zero margine.
-    nome: "iPhone 15 256GB — batt 89% + vetro graffiato + scocca segni MINIMI",
+    nome: "iPhone 15 256GB — batt 89% + vetro graffiato, scocca quasi nuova",
     modello: "iPhone 15", gb: "256 GB",
-    r: { batt: BATT_85, schermo: GRAFFIATO, scocca: SCOCCA_MINIMI },
+    r: { batt: BATT_85, schermo: GRAFFIATO, scocca: "✅ Nessun danno (come nuova)" },
     swappie: 261, nota: "preventivo reale Swappie del 28/09/2026",
+  },
+  {
+    nome: "iPhone 17 Pro 512GB — batt 99% + vetro graffiato, scocca quasi nuova",
+    modello: "iPhone 17 Pro", gb: "512 GB",
+    r: { batt: "🟢 90–100%", schermo: GRAFFIATO, scocca: "✅ Nessun danno (come nuova)" },
+    swappie: 606, nota: "preventivo reale Swappie del 28/09/2026",
   },
   {
     nome: "iPhone 14 128GB — IMEI non leggibile (solo ricambi)",
@@ -169,10 +174,8 @@ const rif = calcolaValore(b15, { ...PERFETTO, modello: "iPhone 15" }).finale;
 const peggioramenti = [
   ["batteria 80-89%", { batt: BATT_85 }],
   ["batteria 70-79%", { batt: BATT_75 }],
-  ["graffi lievi", { schermo: GRAFFI }],
-  ["vetro molto graffiato", { schermo: GRAFFIATO }],
+  ["vetro graffiato", { schermo: GRAFFIATO }],
   ["schermo crepato", { schermo: CREPATO }],
-  ["scocca segni minimi", { scocca: SCOCCA_MINIMI }],
   ["scocca segni lievi", { scocca: SCOCCA_LIEVI }],
   ["scocca segni evidenti", { scocca: "⚠️ Scocca con segni evidenti" }],
   ["scocca piegata", { scocca: "💥 Scocca molto danneggiata o piegata" }],
@@ -217,7 +220,6 @@ console.log(
 // si passava da 0% a -8,9% di colpo.
 const SCALA_SCOCCA = [
   "✅ Nessun danno (come nuova)",
-  SCOCCA_MINIMI,
   SCOCCA_LIEVI,
   "⚠️ Scocca con segni evidenti",
   "💥 Scocca molto danneggiata o piegata",
@@ -240,7 +242,6 @@ console.log(salti.length
 // non se ne accorgeva.
 const SCALA_SCHERMO = [
   "✅ Perfetto, come nuovo",
-  GRAFFI,
   GRAFFIATO,
   CREPATO,
 ];

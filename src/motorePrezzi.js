@@ -119,27 +119,17 @@ export const MODELLI = [
 
 // ── Tier estetici (fonte: ladder Swappie LIKE_NEW -> MODERATE) ───────────────
 // L'ordine conta: peggiora() puo' solo scendere lungo questa scala.
+// Tre gradini oltre al "come nuovo", uno per ogni risposta sulla scocca.
+// C'e' stato anche un gradino intermedio "segni appena percettibili", tolto
+// perche' la taratura non reggeva: su iPhone 15 valeva giusto, su iPhone 17 Pro
+// toglieva 13 EUR dove Swappie ne toglie 49. Meglio una scala corta e onesta
+// che una piu' fine ma tarata su un modello solo.
 export const TIER = {
   comeNuovo:   { k: 1.0,  label: "Come nuovo" },
-  quasiNuovo:  { k: 0.98, label: "Segni appena percettibili" },
   ottimo:      { k: 0.93, label: "Segni minimi di usura" },
   buono:       { k: 0.86, label: "Segni di usura evidenti" },
   accettabile: { k: 0.76, label: "Molto segnato" },
 };
-
-// "quasiNuovo" non ha una colonna in TIER_MODELLO: vale un terzo dello sconto
-// di "ottimo". Misurato su iPhone 15 256GB, dove Swappie toglie 12 EUR per i
-// segni minimi e 36 per quelli lievi, esattamente un terzo. Senza questo
-// gradino la scala saltava da 0% a -8,9% e un telefono quasi nuovo ma non
-// perfetto finiva pagato quanto uno immacolato.
-const FRAZIONE_QUASI_NUOVO = 1 / 3;
-
-// I graffi leggeri sul vetro pesano a parte, non sul tier della scocca.
-// Prima il tier prendeva il peggiore fra schermo e scocca: con lo schermo
-// graffiato la risposta sulla scocca non cambiava piu' il prezzo di un euro.
-// Swappie valuta le superfici separatamente e le somma, e per i graffi leggeri
-// sul vetro non chiede nulla: il 2% qui e' una nostra prudenza, non un suo dato.
-const FATTORE_GRAFFI_SCHERMO = 0.98;
 
 // Quanto pesa l'usura estetica, per modello: [ottimo, buono, accettabile]
 // come frazione del prezzo "come nuovo". Non e' una costante: su un iPhone 17
@@ -382,7 +372,6 @@ export function calcolaValore(base, r = {}) {
   // piu' sotto: mescolarli faceva sparire la risposta sulla scocca.
   const schermo = q("schermo");
   const scocca = q("scocca");
-  if (scocca.includes("segni minimi")) peggiora("quasiNuovo");
   if (scocca.includes("segni lievi")) peggiora("ottimo");
   if (scocca.includes("segni evidenti")) peggiora("buono");
   if (scocca.includes("molto danneggiata")) peggiora("accettabile");
@@ -390,27 +379,15 @@ export function calcolaValore(base, r = {}) {
   // Il peso dell'usura cambia molto da modello a modello: si usa il valore
   // specifico quando c'e', altrimenti quello generico.
   const perModelloTier = perModello(TIER_MODELLO, modello);
-  const kOttimo = perModelloTier ? perModelloTier[0] : TIER.ottimo.k;
-  let k;
-  if (tier === "comeNuovo") {
-    k = 1;
-  } else if (tier === "quasiNuovo") {
-    k = 1 - (1 - kOttimo) * FRAZIONE_QUASI_NUOVO;
-  } else {
-    // ottimo / buono / accettabile -> colonne 0, 1, 2 di TIER_MODELLO
-    const indice = ORDINE.indexOf(tier) - 2;
-    k = perModelloTier ? perModelloTier[indice] : TIER[tier].k;
-  }
-  let prezzo = base * k;
+  // comeNuovo non ha colonna: le tre colonne sono ottimo, buono, accettabile.
+  const indice = ORDINE.indexOf(tier) - 1;
+  const k = indice < 0
+    ? 1
+    : (perModelloTier ? perModelloTier[indice] : TIER[tier].k);
+  const prezzo0 = base * k;
+  let prezzo = prezzo0;
   if (k < 1) {
-    voci.push(`Scocca "${TIER[tier].label}": −€${Math.round(base - prezzo)}`);
-  }
-
-  // Graffi leggeri sul vetro: voce a se', si somma allo stato della scocca.
-  if (schermo.includes("piccoli graffi")) {
-    const taglio = Math.round(prezzo * (1 - FATTORE_GRAFFI_SCHERMO));
-    prezzo -= taglio;
-    voci.push(`Schermo con piccoli graffi: −€${taglio}`);
+    voci.push(`Scocca "${TIER[tier].label}": −€${Math.round(base - prezzo0)}`);
   }
 
   // ── 3. Riparazioni: euro fissi ────────────────────────────────────────────
@@ -424,11 +401,15 @@ export function calcolaValore(base, r = {}) {
     if (c > 0) riparazioni.push({ etichetta, costo: c });
   };
 
+  // Il vetro ha tre stati: intatto, graffiato, crepato. Graffiato e crepato
+  // costano uguale perche' in entrambi i casi il vetro si sostituisce, ed e'
+  // anche quello che fa Swappie (143 contro 145 EUR sull'iPhone 15).
+  // "graffi visibili" copre anche la vecchia etichetta "piccoli graffi
+  // visibili", cosi' le valutazioni gia' salvate restano coerenti.
   if (schermo.includes("crepe") || schermo.includes("rottur")) {
     add("schermoRotto", "Schermo crepato o rotto");
-  } else if (schermo.includes("molto graffiat")) {
-    // Swappie tratta il vetro molto graffiato come sostituzione piena del vetro.
-    add("schermoRotto", "Vetro molto graffiato (da sostituire)");
+  } else if (schermo.includes("graffi visibili") || schermo.includes("molto graffiat")) {
+    add("schermoRotto", "Vetro graffiato (da sostituire)");
   }
 
   // Sotto il 90% la batteria va sostituita. Verifichiamo la risposta buona
