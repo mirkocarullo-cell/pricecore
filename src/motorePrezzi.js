@@ -134,6 +134,13 @@ export const TIER = {
 // perfetto finiva pagato quanto uno immacolato.
 const FRAZIONE_QUASI_NUOVO = 1 / 3;
 
+// I graffi leggeri sul vetro pesano a parte, non sul tier della scocca.
+// Prima il tier prendeva il peggiore fra schermo e scocca: con lo schermo
+// graffiato la risposta sulla scocca non cambiava piu' il prezzo di un euro.
+// Swappie valuta le superfici separatamente e le somma, e per i graffi leggeri
+// sul vetro non chiede nulla: il 2% qui e' una nostra prudenza, non un suo dato.
+const FATTORE_GRAFFI_SCHERMO = 0.98;
+
 // Quanto pesa l'usura estetica, per modello: [ottimo, buono, accettabile]
 // come frazione del prezzo "come nuovo". Non e' una costante: su un iPhone 17
 // i segni d'uso tolgono il 4%, su un SE 2020 il 35%. Sui telefoni vecchi ed
@@ -371,9 +378,10 @@ export function calcolaValore(base, r = {}) {
   // Confronti in minuscolo: le etichette delle domande cambiano nel tempo e un
   // confronto sensibile alle maiuscole fallisce in silenzio, lasciando il
   // prezzo invariato senza dare errore.
+  // Il tier lo decide la scocca, da sola. Lo schermo ha la sua voce separata
+  // piu' sotto: mescolarli faceva sparire la risposta sulla scocca.
   const schermo = q("schermo");
   const scocca = q("scocca");
-  if (schermo.includes("piccoli graffi")) peggiora("ottimo");
   if (scocca.includes("segni minimi")) peggiora("quasiNuovo");
   if (scocca.includes("segni lievi")) peggiora("ottimo");
   if (scocca.includes("segni evidenti")) peggiora("buono");
@@ -395,7 +403,14 @@ export function calcolaValore(base, r = {}) {
   }
   let prezzo = base * k;
   if (k < 1) {
-    voci.push(`Stato estetico "${TIER[tier].label}": −€${Math.round(base - prezzo)}`);
+    voci.push(`Scocca "${TIER[tier].label}": −€${Math.round(base - prezzo)}`);
+  }
+
+  // Graffi leggeri sul vetro: voce a se', si somma allo stato della scocca.
+  if (schermo.includes("piccoli graffi")) {
+    const taglio = Math.round(prezzo * (1 - FATTORE_GRAFFI_SCHERMO));
+    prezzo -= taglio;
+    voci.push(`Schermo con piccoli graffi: −€${taglio}`);
   }
 
   // ── 3. Riparazioni: euro fissi ────────────────────────────────────────────

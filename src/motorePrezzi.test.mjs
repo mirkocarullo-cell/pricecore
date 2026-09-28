@@ -233,6 +233,30 @@ console.log(salti.length
   ? salti.map(s => "  " + s).join("\n")
   : `Scala scocca monotona: ${prezziScala.map(p => "€" + p).join(" > ")}`);
 
+// Le due domande estetiche devono contare tutte e due, sempre. Prima il tier
+// prendeva il peggiore fra schermo e scocca: rispondendo "piccoli graffi" sullo
+// schermo, le prime tre risposte sulla scocca davano tutte lo stesso prezzo
+// (360 EUR su iPhone 15 256GB). Il test guardava una superficie alla volta e
+// non se ne accorgeva.
+const SCALA_SCHERMO = [
+  "✅ Perfetto, come nuovo",
+  GRAFFI,
+  GRAFFIATO,
+  CREPATO,
+];
+const collisioni = [];
+for (const sch of SCALA_SCHERMO) {
+  const prezzi = SCALA_SCOCCA.map(sc =>
+    calcolaValore(b15, { ...PERFETTO, modello: "iPhone 15", schermo: sch, scocca: sc }).finale);
+  const unici = new Set(prezzi);
+  if (unici.size !== prezzi.length) {
+    collisioni.push(`schermo "${sch}": la scocca non cambia il prezzo (${prezzi.map(p => "€" + p).join(", ")})`);
+  }
+}
+console.log(collisioni.length
+  ? collisioni.map(s => "  " + s).join("\n")
+  : `Scocca e schermo indipendenti: ${SCALA_SCHERMO.length} x ${SCALA_SCOCCA.length} combinazioni tutte distinte.`);
+
 // Copertura: ogni voce del menu deve trovare un prezzo in tabella, per ogni
 // taglio offerto dall'app. Intercetta i modelli aggiunti al menu e dimenticati
 // in BASE, e le differenze di grafia tra le due liste ("mini" vs "Mini").
